@@ -71,57 +71,17 @@ func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
 	return payload, nil
 }
 
-// The time defined in the jwt claim needs to have the .UTC().Unix() so that the commented out function works
-// ------------------
-//
-//	if !token.Valid {
-//		return c.JSON(fiber.Map{
-//			"jwt_exp": "The token has expired!",
-//		})
-//	}
-//
-// ------------------
 func (maker *JWTMaker) GenerateRefreshCookie(token string, config config.Config, Username string, ctx *fiber.Ctx) error {
 	RefreshTokenExpirationTime := RefreshTokenExpirationTime(config.RefreshTokenDuration)
-	//
-	// jwtKey := []byte(config.TokenSymmetricKey)
-	//
-	// refreshToken := jwt.New(jwt.SigningMethodHS256)
-	// rtClaims := refreshToken.Claims.(jwt.MapClaims)
-	//
-	// // define the fields that are stored inside the refresh jwt payload
-	// rtClaims["username"] = Username
-	// rtClaims["exp"] = RefreshTokenExpirationTime.UTC().Unix()
-	//
-	// rt, err := refreshToken.SignedString(jwtKey)
-	// if err != nil {
-	// 	fmt.Println("Error creting refreshToken!")
-	// }
 
 	refresh_cookie := GenerateCookie(RefreshCookieName, token, RefreshTokenExpirationTime, ctx)
 	ctx.Cookie(&refresh_cookie)
 
-	// if err != nil {
-	// 	fmt.Println("Error")
-	// }
 	return nil
 }
 
 func (maker *JWTMaker) GenerateAccessCookie(token string, config config.Config, Username string, ctx *fiber.Ctx) error {
 	AccessTokenExpirationTime := AccessTokenExpirationTime(config.AccessTokenDuration)
-
-	// jwtKey := []byte(config.TokenSymmetricKey)
-	//
-	// accessToken := jwt.New(jwt.SigningMethodHS256)
-	// atClaims := accessToken.Claims.(jwt.MapClaims)
-	//
-	// // define the info that is stored inside the access jwt payload
-	// atClaims["username"] = Username
-	// atClaims["exp"] = AccessTokenExpirationTime.UTC().Unix()
-	// at, err := accessToken.SignedString(jwtKey)
-	// if err != nil {
-	// 	fmt.Println("Error creting accessToken!")
-	//}
 
 	access_cookie := GenerateCookie(AccessCookieName, token, AccessTokenExpirationTime, ctx)
 	ctx.Cookie(&access_cookie) // send cookie to the client

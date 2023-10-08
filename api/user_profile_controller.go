@@ -26,6 +26,17 @@ type (
 		Username string `uri:"username" binding:"required,min=1"`
 	}
 
+	userProfileResponse struct {
+		Username      string         `uri:"username"`
+		FullName      string         `json:"full_name"`
+		Email         string         `json:"email"`
+		Age           int32          `json:"age"`
+		Gender        string         `json:"gender"`
+		HeightCm      int32          `json:"height_cm"`
+		HeightFtIn    string         `json:"height_ft_in"`
+		PreferredUnit val.Weightunit `json:"preferred_unit"`
+	}
+
 	updateUserProfileRequest struct {
 		Username      string         `uri:"username" binding:"required,min=1"`
 		FullName      string         `json:"full_name"`
@@ -36,6 +47,8 @@ type (
 		PreferredUnit val.Weightunit `json:"preferred_unit" binding:"weight_unit"`
 	}
 )
+
+// newUserResponse function
 
 func (server *Server) createUserProfile(ctx *fiber.Ctx) error {
 	var req createUserProfileRequest
@@ -63,7 +76,7 @@ func (server *Server) createUserProfile(ctx *fiber.Ctx) error {
 		if errorCode == db.UniqueViolation {
 			return res.ResponseUnauthenticated(ctx, nil, err.Error())
 		}
-		return res.ResponseError(ctx, nil, "Error while creating user")
+		return res.ResponseError(ctx, nil, "Error while creating user profile")
 	}
 
 	return ctx.Status(http.StatusOK).JSON(userProfile)
@@ -83,7 +96,18 @@ func (server *Server) getUserProfile(ctx *fiber.Ctx) error {
 		return res.ResponseError(ctx, nil, err.Error())
 	}
 
-	return ctx.Status(http.StatusOK).JSON(userProfile)
+	rsp := userProfileResponse{
+		Username:      userProfile.Userprofile.Username,
+		FullName:      userProfile.Userprofile.FullName,
+		Email:         userProfile.User.Email,
+		Age:           userProfile.Userprofile.Age,
+		Gender:        userProfile.Userprofile.Gender,
+		HeightCm:      userProfile.Userprofile.HeightCm,
+		HeightFtIn:    userProfile.Userprofile.HeightFtIn,
+		PreferredUnit: val.Weightunit(userProfile.Userprofile.PreferredUnit),
+	}
+
+	return ctx.Status(http.StatusOK).JSON(rsp)
 }
 
 func (server *Server) updateUserProfile(ctx *fiber.Ctx) error {

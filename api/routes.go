@@ -12,12 +12,12 @@ func (server *Server) SetupRouter(app *fiber.App) {
 	routes.Post("users", server.createUser)
 	routes.Post("users/login", server.LoginUser)
 	routes.Post("/token/refresh", server.renewAccessToken)
+	routes.Post("user_profile", server.createUserProfile)
 
 	authRoutes := routes.Use(auth.AuthMiddleware(server.tokenMaker))
 
 	// user_profile SetupRouter
-	authRoutes.Post("user_profile", server.createUserProfile)
-	authRoutes.Get("user_profile/:username", server.getUserProfile)
+	authRoutes.Get("user_profile", server.getUserProfile)
 	authRoutes.Patch("user_profile", server.updateUserProfile)
 
 	server.app = app

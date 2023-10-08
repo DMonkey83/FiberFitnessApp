@@ -4,9 +4,10 @@ VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
 -- name: GetUserProfile :one
-SELECT user_profile_id, username, full_name, age, gender, height_cm, height_ft_in, preferred_unit
+SELECT sqlc.embed(UserProfile),sqlc.embed(users)
 FROM UserProfile
-WHERE username = $1;
+JOIN users ON UserProfile.username = users.username
+WHERE UserProfile.username = $1 LIMIT 1;
 
 -- name: UpdateUserProfile :one
 UPDATE UserProfile

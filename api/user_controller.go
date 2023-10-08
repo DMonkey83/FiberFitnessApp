@@ -16,9 +16,15 @@ import (
 
 // createUserRequest struct
 type createUserRequest struct {
-	Username string `json:"username" validate:"required,alphanum,min=6,max=50"`
-	Password string `json:"password" validate:"required,min=6,max=50"`
-	Email    string `json:"email" validate:"required,email"`
+	Username      string         `json:"username" validate:"required,alphanum,min=6,max=50"`
+	FullName      string         `json:"full_name" validate:"required,min=6,max=50"`
+	Age           int32          `json:"age" validate:"required,min=1,max=120"`
+	Gender        string         `json:"gender" validate:"required,oneof=female male"`
+	HeightCm      int32          `json:"height_cm" validate:"required,min=1,max=300"`
+	HeightFtIn    string         `json:"height_ft_in"`
+	PreferredUnit val.Weightunit `json:"preferred_unit" validate:"required"`
+	Password      string         `json:"password" validate:"required,min=6,max=50"`
+	Email         string         `json:"email" validate:"required,email"`
 }
 
 type getUserRequest struct {
@@ -85,6 +91,25 @@ func (server *Server) createUser(ctx *fiber.Ctx) error {
 		return res.ResponseError(ctx, nil, "Eror accured during registration!")
 	}
 
+	arg1 := db.CreateUserProfileParams{
+		Username:      req.Username,
+		FullName:      req.FullName,
+		Age:           req.Age,
+		Gender:        req.Gender,
+		HeightCm:      req.HeightCm,
+		HeightFtIn:    req.HeightFtIn,
+		PreferredUnit: db.Weightunit(req.PreferredUnit),
+	}
+	profile, err := server.store.CreateUserProfile(ctx.Context(), arg1)
+	if err != nil {
+		errorCode := db.ErrorCode(err)
+		if errorCode == db.UniqueViolation {
+			return res.ResponseUnauthenticated(ctx, nil, err.Error())
+		}
+		return res.ResponseError(ctx, nil, "Error while creating user profile")
+	}
+	log.Print(profile)
+
 	rsp := newUserResponse(user)
 
 	return res.ResponseSuccess(ctx, rsp, res.CreatedMessage("User created!"))
@@ -103,7 +128,7 @@ func (server *Server) LoginUser(ctx *fiber.Ctx) error {
 		}
 		return res.ResponseError(ctx, nil, "Eror accured during Login!")
 	}
-	accessToken, accessPayload, err := server.tokenMaker.CreateToken(
+	accessToken, _, err := server.tokenMaker.CreateToken(
 		user.Username,
 		server.config.AccessTokenDuration,
 	)
@@ -123,6 +148,7 @@ func (server *Server) LoginUser(ctx *fiber.Ctx) error {
 		return res.ResponseUnauthenticated(ctx, nil, "Incorrect password!")
 	}
 
+	log.Print(refresherPayload, ctx)
 	// if the username exists and the passwords match, set JWT Auth cookies with the user details.
 	server.tokenMaker.GenerateAccessCookie(accessToken, server.config, user.Username, ctx)
 	server.tokenMaker.GenerateRefreshCookie(refreshToken, server.config, user.Username, ctx)
@@ -140,10 +166,9 @@ func (server *Server) LoginUser(ctx *fiber.Ctx) error {
 	}
 
 	rsp := loginUserResponse{
-		SessionID:             session.ID,
-		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
-		RefreshTokenExpiresAt: refresherPayload.ExpiredAt,
-		User:                  newUserResponse(user),
+		SessionID:   session.ID,
+		AccessToken: accessToken,
+		User:        newUserResponse(user),
 	}
 
 	return res.ResponseSuccess(ctx, rsp, "Login succesful!")
