@@ -17,7 +17,7 @@ func (server *Server) SetupRouter(app *fiber.App) {
 	authRoutes := routes.Use(auth.AuthMiddleware(server.tokenMaker))
 
 	// user_profile SetupRouter
-	authRoutes.Get("user_profile", server.getUserProfile)
+	authRoutes.Get("user_profile/:username", server.getUserProfile)
 	authRoutes.Patch("user_profile", server.updateUserProfile)
 
 	server.app = app

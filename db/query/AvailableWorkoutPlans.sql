@@ -22,19 +22,19 @@ WHERE plan_id = $1;
 -- name: UpdateAvailablePlan :one
 UPDATE AvailableWorkoutPlans
 SET 
-description = $2, 
-plan_name = $3, 
-goal = $4,
-difficulty = $5,
-is_public = $6
-WHERE plan_id = $1
+description = COALESCE(sqlc.narg(description),description),
+plan_name = COALESCE(sqlc.narg(plan_name),plan_name),
+goal = COALESCE(sqlc.narg(goal),goal),
+difficulty = COALESCE(sqlc.narg(difficulty),difficulty),
+is_public = COALESCE(sqlc.narg(is_public),is_public)
+WHERE creator_username = @creator_username
 RETURNING *;
 
 -- name: ListAvailablePlansByCreator :many
 SELECT *
 FROM AvailableWorkoutPlans
 WHERE creator_username =$1
-ORDER BY plan_name -- You can change the ORDER BY clause to order by a different column if needed
+ORDER BY plan_name DESC -- You can change the ORDER BY clause to order by a different column if needed
 LIMIT $2
 OFFSET $3;
 

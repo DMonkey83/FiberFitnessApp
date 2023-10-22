@@ -43,11 +43,11 @@ func TestGetUserProfile(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, userP2)
 
-	require.Equal(t, userP1.Username, userP2.Username)
-	require.Equal(t, userP1.UserProfileID, userP2.UserProfileID)
-	require.Equal(t, userP1.FullName, userP2.FullName)
-	require.Equal(t, userP1.Gender, userP2.Gender)
-	require.Equal(t, userP1.Age, userP2.Age)
+	require.Equal(t, userP1.Username, userP2.User.Username)
+	require.Equal(t, userP1.UserProfileID, userP2.Userprofile.UserProfileID)
+	require.Equal(t, userP1.FullName, userP2.Userprofile.FullName)
+	require.Equal(t, userP1.Gender, userP2.Userprofile.Gender)
+	require.Equal(t, userP1.Age, userP2.Userprofile.Age)
 }
 
 func TestUpdateUserProfile(t *testing.T) {

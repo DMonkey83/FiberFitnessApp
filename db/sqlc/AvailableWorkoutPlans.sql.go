@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createAvailablePlan = `-- name: CreateAvailablePlan :one
@@ -135,7 +137,7 @@ const listAvailablePlansByCreator = `-- name: ListAvailablePlansByCreator :many
 SELECT plan_id, plan_name, description, goal, difficulty, is_public, created_at, updated_at, creator_username
 FROM AvailableWorkoutPlans
 WHERE creator_username =$1
-ORDER BY plan_name -- You can change the ORDER BY clause to order by a different column if needed
+ORDER BY plan_name DESC -- You can change the ORDER BY clause to order by a different column if needed
 LIMIT $2
 OFFSET $3
 `
@@ -179,32 +181,32 @@ func (q *Queries) ListAvailablePlansByCreator(ctx context.Context, arg ListAvail
 const updateAvailablePlan = `-- name: UpdateAvailablePlan :one
 UPDATE AvailableWorkoutPlans
 SET 
-description = $2, 
-plan_name = $3, 
-goal = $4,
-difficulty = $5,
-is_public = $6
-WHERE plan_id = $1
+description = COALESCE($1,description),
+plan_name = COALESCE($2,plan_name),
+goal = COALESCE($3,goal),
+difficulty = COALESCE($4,difficulty),
+is_public = COALESCE($5,is_public)
+WHERE creator_username = $6
 RETURNING plan_id, plan_name, description, goal, difficulty, is_public, created_at, updated_at, creator_username
 `
 
 type UpdateAvailablePlanParams struct {
-	PlanID      int64           `json:"plan_id"`
-	Description string          `json:"description"`
-	PlanName    string          `json:"plan_name"`
-	Goal        Workoutgoalenum `json:"goal"`
-	Difficulty  Difficulty      `json:"difficulty"`
-	IsPublic    Visibility      `json:"is_public"`
+	Description     pgtype.Text         `json:"description"`
+	PlanName        pgtype.Text         `json:"plan_name"`
+	Goal            NullWorkoutgoalenum `json:"goal"`
+	Difficulty      NullDifficulty      `json:"difficulty"`
+	IsPublic        NullVisibility      `json:"is_public"`
+	CreatorUsername string              `json:"creator_username"`
 }
 
 func (q *Queries) UpdateAvailablePlan(ctx context.Context, arg UpdateAvailablePlanParams) (Availableworkoutplan, error) {
 	row := q.db.QueryRow(ctx, updateAvailablePlan,
-		arg.PlanID,
 		arg.Description,
 		arg.PlanName,
 		arg.Goal,
 		arg.Difficulty,
 		arg.IsPublic,
+		arg.CreatorUsername,
 	)
 	var i Availableworkoutplan
 	err := row.Scan(

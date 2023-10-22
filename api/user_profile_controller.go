@@ -87,10 +87,12 @@ func (server *Server) getUserProfile(ctx *fiber.Ctx) error {
 	if err := ctx.ParamsParser(&req); err != nil {
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
+	log.Print(ctx.Cookies("refresh_token"))
 
 	userProfile, err := server.store.GetUserProfile(ctx.Context(), req.Username)
 	if err != nil {
 		if err == db.ErrRecordNotFound {
+			log.Print("getUserProfile", req.Username)
 			return res.ResponseNotFound(ctx, nil, err.Error())
 		}
 		return res.ResponseError(ctx, nil, err.Error())

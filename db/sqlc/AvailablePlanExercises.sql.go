@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createAvailablePlanExercise = `-- name: CreateAvailablePlanExercise :one
@@ -83,10 +85,8 @@ const listAllAvailablePlanExercises = `-- name: ListAllAvailablePlanExercises :m
 SELECT id, plan_id, exercise_name, sets, rest_duration, notes
 FROM AvailablePlanExercises
 ORDER BY "exercise_name"
-LIMIT
-    $1
-    OFFSET
-    $2
+LIMIT $1
+OFFSET $2
 `
 
 type ListAllAvailablePlanExercisesParams struct {
@@ -123,24 +123,30 @@ func (q *Queries) ListAllAvailablePlanExercises(ctx context.Context, arg ListAll
 
 const updateAvailablePlanExercise = `-- name: UpdateAvailablePlanExercise :one
 UPDATE AvailablePlanExercises
-SET "notes" = $2, "sets" = $3, "rest_duration" = $4
-WHERE "id" = $1
+SET 
+notes = COALESCE($1,notes),
+sets = COALESCE($2,sets),
+rest_duration = COALESCE($3,rest_duration),
+exercise_name = COALESCE($4,exercise_name)
+WHERE id = $5
 RETURNING id, plan_id, exercise_name, sets, rest_duration, notes
 `
 
 type UpdateAvailablePlanExerciseParams struct {
-	ID           int64  `json:"id"`
-	Notes        string `json:"notes"`
-	Sets         int32  `json:"sets"`
-	RestDuration string `json:"rest_duration"`
+	Notes        pgtype.Text `json:"notes"`
+	Sets         pgtype.Int4 `json:"sets"`
+	RestDuration pgtype.Text `json:"rest_duration"`
+	ExerciseName pgtype.Text `json:"exercise_name"`
+	ID           int64       `json:"id"`
 }
 
 func (q *Queries) UpdateAvailablePlanExercise(ctx context.Context, arg UpdateAvailablePlanExerciseParams) (Availableplanexercise, error) {
 	row := q.db.QueryRow(ctx, updateAvailablePlanExercise,
-		arg.ID,
 		arg.Notes,
 		arg.Sets,
 		arg.RestDuration,
+		arg.ExerciseName,
+		arg.ID,
 	)
 	var i Availableplanexercise
 	err := row.Scan(

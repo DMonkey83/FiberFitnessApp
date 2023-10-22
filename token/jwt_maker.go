@@ -94,8 +94,8 @@ func GenerateCookie(cookie_name string, cookie_value string, exp_time time.Time,
 		Name:     cookie_name,
 		Value:    cookie_value,
 		HTTPOnly: true,
-		Secure:   true,
-		Expires:  exp_time,
+		// Secure:   true,
+		Expires: exp_time,
 	}
 }
 

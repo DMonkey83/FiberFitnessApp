@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/DMonkey83/MyFitnessApp/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,12 +56,11 @@ func TestUpdateAvailableWorkoutPlan(t *testing.T) {
 	plan1 := CreateRandomAvailableWorkoutPlan(t)
 
 	arg := UpdateAvailablePlanParams{
-		PlanID:      plan1.PlanID,
-		PlanName:    util.GetRandomUsername(6),
-		Description: util.GetRandomUsername(49),
-		Difficulty:  DifficultyBeginner,
-		Goal:        WorkoutgoalenumBuildMuscle,
-		IsPublic:    VisibilityPublic,
+		PlanName:    pgtype.Text{String: util.GetRandomUsername(6), Valid: true},
+		Description: pgtype.Text{String: util.GetRandomUsername(49), Valid: true},
+		Difficulty:  NullDifficulty{Difficulty: DifficultyAdvanced, Valid: true},
+		Goal:        NullWorkoutgoalenum{Workoutgoalenum: WorkoutgoalenumBuildMuscle, Valid: true},
+		IsPublic:    NullVisibility{Visibility: VisibilityPublic, Valid: true},
 	}
 
 	plan2, err := testStore.UpdateAvailablePlan(context.Background(), arg)
@@ -68,7 +68,6 @@ func TestUpdateAvailableWorkoutPlan(t *testing.T) {
 	require.NotEmpty(t, plan2)
 
 	require.Equal(t, plan1.CreatorUsername, plan2.CreatorUsername)
-	require.Equal(t, arg.PlanID, plan2.PlanID)
 	require.Equal(t, arg.Description, plan2.Description)
 	require.Equal(t, arg.Goal, plan2.Goal)
 	require.Equal(t, arg.Difficulty, plan2.Difficulty)

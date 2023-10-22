@@ -20,15 +20,17 @@ WHERE "id" = $1;
 
 -- name: UpdateAvailablePlanExercise :one
 UPDATE AvailablePlanExercises
-SET "notes" = $2, "sets" = $3, "rest_duration" = $4
-WHERE "id" = $1
+SET 
+notes = COALESCE(sqlc.narg(notes),notes),
+sets = COALESCE(sqlc.narg(sets),sets),
+rest_duration = COALESCE(sqlc.narg(rest_duration),rest_duration),
+exercise_name = COALESCE(sqlc.narg(exercise_name),exercise_name)
+WHERE id = @id
 RETURNING *;
 
 -- name: ListAllAvailablePlanExercises :many
 SELECT *
 FROM AvailablePlanExercises
 ORDER BY "exercise_name"
-LIMIT
-    $1
-    OFFSET
-    $2;
+LIMIT $1
+OFFSET $2;

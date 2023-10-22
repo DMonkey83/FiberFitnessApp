@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -22,6 +23,8 @@ type renewAccessTokenResponse struct {
 }
 
 func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
+	ctx.Cookies("refresh_token")
+	log.Print("refresh_token:", ctx.Cookies("refresh_token"))
 	var req renewAccessTokenRequest
 	if err := ctx.BodyParser(&req); err != nil {
 		return response.ResponseValidationError(ctx, nil, err.Error())

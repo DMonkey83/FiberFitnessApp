@@ -14,7 +14,7 @@ import (
 const (
 	authorizationHeaderKey  = "authorization"
 	authorizationTypeBearer = "bearer"
-	authorizationPayloadKey = "authorization_payload"
+	AuthorizationPayloadKey = "authorization_payload"
 )
 
 func AuthMiddleware(tokenMaker token.Maker) fiber.Handler {
@@ -41,7 +41,7 @@ func AuthMiddleware(tokenMaker token.Maker) fiber.Handler {
 			return ctx.Status(http.StatusUnauthorized).JSON(err.Error())
 		}
 
-		ctx.Locals(authorizationPayloadKey, payload)
+		ctx.Locals(AuthorizationPayloadKey, payload)
 		return ctx.Next()
 	}
 }

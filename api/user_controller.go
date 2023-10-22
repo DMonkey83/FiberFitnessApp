@@ -166,9 +166,11 @@ func (server *Server) LoginUser(ctx *fiber.Ctx) error {
 	}
 
 	rsp := loginUserResponse{
-		SessionID:   session.ID,
-		AccessToken: accessToken,
-		User:        newUserResponse(user),
+		SessionID:            session.ID,
+		RefreshToken:         refreshToken,
+		AccessToken:          accessToken,
+		AccessTokenExpiresAt: refresherPayload.ExpiredAt,
+		User:                 newUserResponse(user),
 	}
 
 	return res.ResponseSuccess(ctx, rsp, "Login succesful!")
