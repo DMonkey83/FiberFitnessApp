@@ -19,8 +19,10 @@ WHERE id = $1 AND workout_id = $2;
 
 -- name: UpdateOneOffWorkoutExercise :one
 UPDATE OneOffWorkoutExercise
-SET description = $3, muscle_group_name = $4
-WHERE id = $1 AND workout_id = $2
+SET 
+description = COALESCE(sqlc.narg(description),description),
+muscle_group_name = COALESCE(sqlc.narg(muscle_group_name),muscle_group_name)
+WHERE id = @id AND workout_id = @workout_id
 RETURNING *;
 
 -- name: ListAllOneOffWorkoutExercises :many

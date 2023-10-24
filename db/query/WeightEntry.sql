@@ -14,8 +14,12 @@ WHERE weight_entry_id = $1 AND username = $2;
 
 -- name: UpdateWeightEntry :one
 UPDATE WeightEntry
-SET entry_date = $3, weight_kg = $4, weight_lb = $5, notes = $6
-WHERE weight_entry_id = $1 AND username = $2
+SET 
+entry_date = COALESCE(sqlc.narg(entry_date),entry_date),
+weight_kg = COALESCE(sqlc.narg(weight_kg),weight_kg),
+weight_lb = COALESCE(sqlc.narg(weight_lb),weight_lb),
+notes = COALESCE(sqlc.narg(notes),notes)
+WHERE weight_entry_id = @weight_entry_id AND username = @username
 RETURNING *;
 
 -- name: ListWeightEntries :many

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/DMonkey83/MyFitnessApp/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -65,13 +66,13 @@ func TestUpdateWorkoutPlan(t *testing.T) {
 	arg := UpdatePlanParams{
 		PlanID:      plan1.PlanID,
 		Username:    plan1.Username,
-		PlanName:    util.GetRandomUsername(6),
-		Description: util.GetRandomUsername(49),
-		Difficulty:  DifficultyBeginner,
-		Goal:        WorkoutgoalenumBuildMuscle,
-		StartDate:   plan1.StartDate,
-		EndDate:     time.Now().Add(time.Duration(time.Minute)),
-		IsPublic:    VisibilityPublic,
+		PlanName:    pgtype.Text{String: util.GetRandomUsername(6), Valid: true},
+		Description: pgtype.Text{String: util.GetRandomUsername(49), Valid: true},
+		Difficulty:  NullDifficulty{Difficulty: DifficultyBeginner, Valid: true},
+		Goal:        NullWorkoutgoalenum{Workoutgoalenum: WorkoutgoalenumBuildMuscle, Valid: true},
+		StartDate:   pgtype.Timestamptz{Time: plan1.StartDate, Valid: true},
+		EndDate:     pgtype.Timestamptz{Time: time.Now().Add(time.Duration(time.Minute)), Valid: true},
+		IsPublic:    NullVisibility{Visibility: VisibilityPublic, Valid: true},
 	}
 
 	plan2, err := testStore.UpdatePlan(context.Background(), arg)
@@ -80,12 +81,12 @@ func TestUpdateWorkoutPlan(t *testing.T) {
 
 	require.Equal(t, plan1.Username, plan2.Username)
 	require.Equal(t, plan1.StartDate.Minute(), plan2.StartDate.Minute())
-	require.Equal(t, arg.EndDate.Minute(), plan2.EndDate.Minute())
+	require.Equal(t, arg.EndDate.Time.Minute(), plan2.EndDate.Minute())
 	require.Equal(t, arg.PlanID, plan2.PlanID)
-	require.Equal(t, arg.Description, plan2.Description)
-	require.Equal(t, arg.Goal, plan2.Goal)
-	require.Equal(t, arg.Difficulty, plan2.Difficulty)
-	require.Equal(t, arg.IsPublic, plan2.IsPublic)
+	require.Equal(t, arg.Description.String, plan2.Description)
+	require.Equal(t, arg.Goal.Workoutgoalenum, plan2.Goal)
+	require.Equal(t, arg.Difficulty.Difficulty, plan2.Difficulty)
+	require.Equal(t, arg.IsPublic.Visibility, plan2.IsPublic)
 }
 
 func TestDeleteWorkoutPlan(t *testing.T) {

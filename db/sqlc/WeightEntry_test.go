@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/DMonkey83/MyFitnessApp/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,17 +57,17 @@ func TestUpdateWeightEntry(t *testing.T) {
 	arg := UpdateWeightEntryParams{
 		Username:      entry1.Username,
 		WeightEntryID: entry1.WeightEntryID,
-		Notes:         util.GetRandomUsername(79),
-		WeightKg:      int32(util.GetRandomAmount(1, 200)),
-		EntryDate:     time.Now(),
+		Notes:         pgtype.Text{String: util.GetRandomUsername(79), Valid: true},
+		WeightKg:      pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 200)), Valid: true},
+		EntryDate:     pgtype.Timestamptz{Time: time.Now(), Valid: true},
 	}
 
 	wkout2, err := testStore.UpdateWeightEntry(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, wkout2)
 
-	require.Equal(t, arg.Notes, wkout2.Notes)
-	require.Equal(t, arg.WeightKg, wkout2.WeightKg)
+	require.Equal(t, arg.Notes.String, wkout2.Notes)
+	require.Equal(t, arg.WeightKg.Int32, wkout2.WeightKg)
 }
 
 func TestDeleteWeightEntry(t *testing.T) {

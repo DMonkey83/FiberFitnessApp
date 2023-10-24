@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createMaxRepGoal = `-- name: CreateMaxRepGoal :one
@@ -133,26 +135,28 @@ func (q *Queries) ListMaxRepGoals(ctx context.Context, arg ListMaxRepGoalsParams
 
 const updateMaxRepGoal = `-- name: UpdateMaxRepGoal :one
 UPDATE MaxRepGoal
-SET goal_reps = $4, notes = $5
-WHERE exercise_name = $1 AND username = $2 AND goal_id = $3
+SET 
+goal_reps = COALESCE($1,goal_reps), 
+notes = COALESCE($2,notes)
+WHERE exercise_name = $3 AND username = $4 AND goal_id = $5
 RETURNING goal_id, username, exercise_name, goal_reps, notes, created_at
 `
 
 type UpdateMaxRepGoalParams struct {
-	ExerciseName string `json:"exercise_name"`
-	Username     string `json:"username"`
-	GoalID       int64  `json:"goal_id"`
-	GoalReps     int32  `json:"goal_reps"`
-	Notes        string `json:"notes"`
+	GoalReps     pgtype.Int4 `json:"goal_reps"`
+	Notes        pgtype.Text `json:"notes"`
+	ExerciseName string      `json:"exercise_name"`
+	Username     string      `json:"username"`
+	GoalID       int64       `json:"goal_id"`
 }
 
 func (q *Queries) UpdateMaxRepGoal(ctx context.Context, arg UpdateMaxRepGoalParams) (Maxrepgoal, error) {
 	row := q.db.QueryRow(ctx, updateMaxRepGoal,
+		arg.GoalReps,
+		arg.Notes,
 		arg.ExerciseName,
 		arg.Username,
 		arg.GoalID,
-		arg.GoalReps,
-		arg.Notes,
 	)
 	var i Maxrepgoal
 	err := row.Scan(

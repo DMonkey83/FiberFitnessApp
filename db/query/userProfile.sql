@@ -11,8 +11,14 @@ WHERE UserProfile.username = $1 LIMIT 1;
 
 -- name: UpdateUserProfile :one
 UPDATE UserProfile
-SET full_name = $2, age = $3, gender = $4, height_cm = $5, height_ft_in = $6, preferred_unit = $7
-WHERE username = $1
+SET 
+full_name = COALESCE(sqlc.narg(full_name),full_name),
+age = COALESCE(sqlc.narg(age),age),
+gender = COALESCE(sqlc.narg(gender),gender), 
+height_cm = COALESCE(sqlc.narg(height_cm),height_cm),
+height_ft_in = COALESCE(sqlc.narg(height_ft_in),height_ft_in),
+preferred_unit = COALESCE(sqlc.narg(preferred_unit),preferred_unit)
+WHERE username = @username
 RETURNING *;
 
 -- name: DeleteUserProfile :exec

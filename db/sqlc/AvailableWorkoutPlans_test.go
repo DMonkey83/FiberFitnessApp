@@ -56,11 +56,12 @@ func TestUpdateAvailableWorkoutPlan(t *testing.T) {
 	plan1 := CreateRandomAvailableWorkoutPlan(t)
 
 	arg := UpdateAvailablePlanParams{
-		PlanName:    pgtype.Text{String: util.GetRandomUsername(6), Valid: true},
-		Description: pgtype.Text{String: util.GetRandomUsername(49), Valid: true},
-		Difficulty:  NullDifficulty{Difficulty: DifficultyAdvanced, Valid: true},
-		Goal:        NullWorkoutgoalenum{Workoutgoalenum: WorkoutgoalenumBuildMuscle, Valid: true},
-		IsPublic:    NullVisibility{Visibility: VisibilityPublic, Valid: true},
+		PlanName:        pgtype.Text{String: util.GetRandomUsername(6), Valid: true},
+		CreatorUsername: plan1.CreatorUsername,
+		Description:     pgtype.Text{String: util.GetRandomUsername(49), Valid: true},
+		Difficulty:      NullDifficulty{Difficulty: DifficultyAdvanced, Valid: true},
+		Goal:            NullWorkoutgoalenum{Workoutgoalenum: WorkoutgoalenumBuildMuscle, Valid: true},
+		IsPublic:        NullVisibility{Visibility: VisibilityPublic, Valid: true},
 	}
 
 	plan2, err := testStore.UpdateAvailablePlan(context.Background(), arg)
@@ -68,10 +69,10 @@ func TestUpdateAvailableWorkoutPlan(t *testing.T) {
 	require.NotEmpty(t, plan2)
 
 	require.Equal(t, plan1.CreatorUsername, plan2.CreatorUsername)
-	require.Equal(t, arg.Description, plan2.Description)
-	require.Equal(t, arg.Goal, plan2.Goal)
-	require.Equal(t, arg.Difficulty, plan2.Difficulty)
-	require.Equal(t, arg.IsPublic, plan2.IsPublic)
+	require.Equal(t, arg.Description.String, plan2.Description)
+	require.Equal(t, arg.Goal.Workoutgoalenum, plan2.Goal)
+	require.Equal(t, arg.Difficulty.Difficulty, plan2.Difficulty)
+	require.Equal(t, arg.IsPublic.Visibility, plan2.IsPublic)
 }
 
 func TestDeletAvailableWorkoutPlan(t *testing.T) {

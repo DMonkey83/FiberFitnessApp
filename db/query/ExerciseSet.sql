@@ -14,8 +14,11 @@ WHERE set_id = $1;
 
 -- name: UpdateExerciseSet :one
 UPDATE ExerciseSet
-SET weight_lifted = $2, repetitions_completed = $3
-WHERE set_id = $1
+SET 
+set_number = COALESCE(sqlc.narg(set_number),set_number),
+weight_lifted = COALESCE(sqlc.narg(weight_lifted),weight_lifted),
+repetitions_completed = COALESCE(sqlc.narg(repetitions_completed),repetitions_completed)
+WHERE set_id = @set_id
 RETURNING *;
 
 -- name: ListExerciseSets :many

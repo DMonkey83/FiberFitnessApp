@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/DMonkey83/MyFitnessApp/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -57,20 +58,19 @@ func TestUpdateMaxWeightGoal(t *testing.T) {
 
 	arg := UpdateMaxWeightGoalParams{
 		ExerciseName: mwg1.ExerciseName,
-		GoalWeight:   mwg1.GoalWeight,
-		Notes:        mwg1.Notes,
+		GoalWeight:   pgtype.Int4{Int32: int32(util.GetRandomAmount(2, 20)), Valid: true},
+		Notes:        pgtype.Text{String: util.GetRandomUsername(20), Valid: true},
 		Username:     mwg1.Username,
 		GoalID:       mwg1.GoalID,
 	}
 
 	mwg2, err := testStore.UpdateMaxWeightGoal(context.Background(), arg)
 	require.Equal(t, mwg1.ExerciseName, mwg2.ExerciseName)
-	require.Equal(t, mwg1.Notes, mwg2.Notes)
+	require.Equal(t, arg.Notes.String, mwg2.Notes)
 	require.Equal(t, mwg1.Username, mwg2.Username)
-	require.Equal(t, mwg1.GoalWeight, mwg2.GoalWeight)
+	require.Equal(t, arg.GoalWeight.Int32, mwg2.GoalWeight)
 	require.NoError(t, err)
 	require.NotEmpty(t, mwg2)
-
 }
 
 func TestDeleteMaxWeightGoal(t *testing.T) {

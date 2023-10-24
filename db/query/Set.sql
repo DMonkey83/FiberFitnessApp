@@ -15,8 +15,12 @@ WHERE set_id = $1;
 
 -- name: UpdateSet :one
 UPDATE Set
-SET set_number = $2, weight = $3, rest_duration = $4, notes = $5
-WHERE set_id = $1
+SET 
+set_number = COALESCE(sqlc.narg(set_number),set_number), 
+weight = COALESCE(sqlc.narg(weight),weight), 
+rest_duration = COALESCE(sqlc.narg(rest_duration),rest_duration), 
+notes =COALESCE(sqlc.narg(notes),notes)
+WHERE set_id = @set_id
 RETURNING *;
 
 -- name: ListSets :many

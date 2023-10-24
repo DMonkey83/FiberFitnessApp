@@ -8,6 +8,8 @@ package db
 import (
 	"context"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createWeightEntry = `-- name: CreateWeightEntry :one
@@ -131,28 +133,32 @@ func (q *Queries) ListWeightEntries(ctx context.Context, arg ListWeightEntriesPa
 
 const updateWeightEntry = `-- name: UpdateWeightEntry :one
 UPDATE WeightEntry
-SET entry_date = $3, weight_kg = $4, weight_lb = $5, notes = $6
-WHERE weight_entry_id = $1 AND username = $2
+SET 
+entry_date = COALESCE($1,entry_date),
+weight_kg = COALESCE($2,weight_kg),
+weight_lb = COALESCE($3,weight_lb),
+notes = COALESCE($4,notes)
+WHERE weight_entry_id = $5 AND username = $6
 RETURNING weight_entry_id, username, entry_date, weight_kg, weight_lb, notes, created_at
 `
 
 type UpdateWeightEntryParams struct {
-	WeightEntryID int64     `json:"weight_entry_id"`
-	Username      string    `json:"username"`
-	EntryDate     time.Time `json:"entry_date"`
-	WeightKg      int32     `json:"weight_kg"`
-	WeightLb      int32     `json:"weight_lb"`
-	Notes         string    `json:"notes"`
+	EntryDate     pgtype.Timestamptz `json:"entry_date"`
+	WeightKg      pgtype.Int4        `json:"weight_kg"`
+	WeightLb      pgtype.Int4        `json:"weight_lb"`
+	Notes         pgtype.Text        `json:"notes"`
+	WeightEntryID int64              `json:"weight_entry_id"`
+	Username      string             `json:"username"`
 }
 
 func (q *Queries) UpdateWeightEntry(ctx context.Context, arg UpdateWeightEntryParams) (Weightentry, error) {
 	row := q.db.QueryRow(ctx, updateWeightEntry,
-		arg.WeightEntryID,
-		arg.Username,
 		arg.EntryDate,
 		arg.WeightKg,
 		arg.WeightLb,
 		arg.Notes,
+		arg.WeightEntryID,
+		arg.Username,
 	)
 	var i Weightentry
 	err := row.Scan(

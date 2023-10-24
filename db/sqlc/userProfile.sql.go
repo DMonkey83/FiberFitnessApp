@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUserProfile = `-- name: CreateUserProfile :one
@@ -96,30 +98,36 @@ func (q *Queries) GetUserProfile(ctx context.Context, username string) (GetUserP
 
 const updateUserProfile = `-- name: UpdateUserProfile :one
 UPDATE UserProfile
-SET full_name = $2, age = $3, gender = $4, height_cm = $5, height_ft_in = $6, preferred_unit = $7
-WHERE username = $1
+SET 
+full_name = COALESCE($1,full_name),
+age = COALESCE($2,age),
+gender = COALESCE($3,gender), 
+height_cm = COALESCE($4,height_cm),
+height_ft_in = COALESCE($5,height_ft_in),
+preferred_unit = COALESCE($6,preferred_unit)
+WHERE username = $7
 RETURNING user_profile_id, username, full_name, age, gender, height_cm, height_ft_in, preferred_unit, created_at
 `
 
 type UpdateUserProfileParams struct {
-	Username      string     `json:"username"`
-	FullName      string     `json:"full_name"`
-	Age           int32      `json:"age"`
-	Gender        string     `json:"gender"`
-	HeightCm      int32      `json:"height_cm"`
-	HeightFtIn    string     `json:"height_ft_in"`
-	PreferredUnit Weightunit `json:"preferred_unit"`
+	FullName      pgtype.Text    `json:"full_name"`
+	Age           pgtype.Int4    `json:"age"`
+	Gender        pgtype.Text    `json:"gender"`
+	HeightCm      pgtype.Int4    `json:"height_cm"`
+	HeightFtIn    pgtype.Text    `json:"height_ft_in"`
+	PreferredUnit NullWeightunit `json:"preferred_unit"`
+	Username      string         `json:"username"`
 }
 
 func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) (Userprofile, error) {
 	row := q.db.QueryRow(ctx, updateUserProfile,
-		arg.Username,
 		arg.FullName,
 		arg.Age,
 		arg.Gender,
 		arg.HeightCm,
 		arg.HeightFtIn,
 		arg.PreferredUnit,
+		arg.Username,
 	)
 	var i Userprofile
 	err := row.Scan(

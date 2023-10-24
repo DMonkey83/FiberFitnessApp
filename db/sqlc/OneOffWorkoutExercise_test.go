@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/DMonkey83/MyFitnessApp/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,8 +57,8 @@ func TestUpdateOffWorkoutExercise(t *testing.T) {
 	ex1 := CreateRandomOneOffWorkoutExercise(t)
 
 	arg := UpdateOneOffWorkoutExerciseParams{
-		Description:     util.GetRandomUsername(100),
-		MuscleGroupName: MusclegroupenumAbs,
+		Description:     pgtype.Text{String: util.GetRandomUsername(100), Valid: true},
+		MuscleGroupName: NullMusclegroupenum{Musclegroupenum: MusclegroupenumBack, Valid: true},
 		ID:              ex1.ID,
 		WorkoutID:       ex1.WorkoutID,
 	}
@@ -68,8 +69,8 @@ func TestUpdateOffWorkoutExercise(t *testing.T) {
 
 	require.Equal(t, ex1.ExerciseName, ex2.ExerciseName)
 	require.Equal(t, arg.ID, ex2.ID)
-	require.Equal(t, arg.Description, ex2.Description)
-	require.Equal(t, arg.MuscleGroupName, ex2.MuscleGroupName)
+	require.Equal(t, arg.Description.String, ex2.Description)
+	require.Equal(t, arg.MuscleGroupName.Musclegroupenum, ex2.MuscleGroupName)
 	require.Equal(t, arg.WorkoutID, ex2.WorkoutID)
 }
 

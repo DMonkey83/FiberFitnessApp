@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createExerciseLog = `-- name: CreateExerciseLog :one
@@ -132,26 +134,30 @@ func (q *Queries) ListExerciseLog(ctx context.Context, arg ListExerciseLogParams
 
 const updateExerciseLog = `-- name: UpdateExerciseLog :one
 UPDATE ExerciseLog
-SET sets_completed = $2, repetitions_completed = $3, weight_lifted = $4, notes = $5
-WHERE exercise_log_id = $1
+SET 
+sets_completed = COALESCE($1,sets_completed),
+repetitions_completed = COALESCE($2,repetitions_completed),
+weight_lifted = COALESCE($3,weight_lifted),
+notes = COALESCE($4,notes)
+WHERE exercise_log_id = $5
 RETURNING exercise_log_id, log_id, exercise_name, sets_completed, repetitions_completed, weight_lifted, notes, created_at
 `
 
 type UpdateExerciseLogParams struct {
-	ExerciseLogID        int64  `json:"exercise_log_id"`
-	SetsCompleted        int32  `json:"sets_completed"`
-	RepetitionsCompleted int32  `json:"repetitions_completed"`
-	WeightLifted         int32  `json:"weight_lifted"`
-	Notes                string `json:"notes"`
+	SetsCompleted        pgtype.Int4 `json:"sets_completed"`
+	RepetitionsCompleted pgtype.Int4 `json:"repetitions_completed"`
+	WeightLifted         pgtype.Int4 `json:"weight_lifted"`
+	Notes                pgtype.Text `json:"notes"`
+	ExerciseLogID        int64       `json:"exercise_log_id"`
 }
 
 func (q *Queries) UpdateExerciseLog(ctx context.Context, arg UpdateExerciseLogParams) (Exerciselog, error) {
 	row := q.db.QueryRow(ctx, updateExerciseLog,
-		arg.ExerciseLogID,
 		arg.SetsCompleted,
 		arg.RepetitionsCompleted,
 		arg.WeightLifted,
 		arg.Notes,
+		arg.ExerciseLogID,
 	)
 	var i Exerciselog
 	err := row.Scan(

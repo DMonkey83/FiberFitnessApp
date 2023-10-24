@@ -21,8 +21,12 @@ WHERE exercise_log_id = $1;
 
 -- name: UpdateExerciseLog :one
 UPDATE ExerciseLog
-SET sets_completed = $2, repetitions_completed = $3, weight_lifted = $4, notes = $5
-WHERE exercise_log_id = $1
+SET 
+sets_completed = COALESCE(sqlc.narg(sets_completed),sets_completed),
+repetitions_completed = COALESCE(sqlc.narg(repetitions_completed),repetitions_completed),
+weight_lifted = COALESCE(sqlc.narg(weight_lifted),weight_lifted),
+notes = COALESCE(sqlc.narg(notes),notes)
+WHERE exercise_log_id = @exercise_log_id
 RETURNING *;
 
 -- name: ListExerciseLog :many

@@ -14,8 +14,11 @@ WHERE exercise_name = $1;
 
 -- name: UpdateExercise :one
 UPDATE Exercise
-SET description = $2, equipment_required = $3, muscle_group_name = $4
-WHERE exercise_name = $1
+SET 
+description = COALESCE(sqlc.narg(description),description), 
+equipment_required =COALESCE(sqlc.narg(equipment_required),equipment_required), 
+muscle_group_name = COALESCE(sqlc.narg(muscle_group_name),muscle_group_name)
+WHERE exercise_name = @exercise_name
 RETURNING *;
 
 -- name: ListEquipmentExercises :many
@@ -37,6 +40,6 @@ OFFSET $3;
 -- name: ListAllExercises :many
 SELECT *
 FROM Exercise
-ORDER BY exercise_name -- You can change the ORDER BY clause to order by a different column if needed
+ORDER BY exercise_name  -- You can change the ORDER BY clause to order by a different column if needed
 LIMIT $1
 OFFSET $2;

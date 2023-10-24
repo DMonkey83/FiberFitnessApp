@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/DMonkey83/MyFitnessApp/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -59,10 +60,10 @@ func TestUpdateExerciseLog(t *testing.T) {
 
 	arg := UpdateExerciseLogParams{
 		ExerciseLogID:        ex1.ExerciseLogID,
-		SetsCompleted:        int32(util.GetRandomAmount(1, 10)),
-		RepetitionsCompleted: int32(util.GetRandomAmount(1, 100)),
-		WeightLifted:         int32(util.GetRandomAmount(1, 2000)),
-		Notes:                util.GetRandomUsername(100),
+		SetsCompleted:        pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 10)), Valid: true},
+		RepetitionsCompleted: pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 100)), Valid: true},
+		WeightLifted:         pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 2000)), Valid: true},
+		Notes:                pgtype.Text{String: util.GetRandomUsername(100), Valid: true},
 	}
 
 	ex2, err := testStore.UpdateExerciseLog(context.Background(), arg)
@@ -71,10 +72,10 @@ func TestUpdateExerciseLog(t *testing.T) {
 
 	require.Equal(t, ex1.ExerciseName, ex2.ExerciseName)
 	require.Equal(t, ex1.LogID, ex2.LogID)
-	require.Equal(t, arg.SetsCompleted, ex2.SetsCompleted)
-	require.Equal(t, arg.RepetitionsCompleted, ex2.RepetitionsCompleted)
-	require.Equal(t, arg.WeightLifted, ex2.WeightLifted)
-	require.Equal(t, arg.Notes, ex2.Notes)
+	require.Equal(t, arg.SetsCompleted.Int32, ex2.SetsCompleted)
+	require.Equal(t, arg.RepetitionsCompleted.Int32, ex2.RepetitionsCompleted)
+	require.Equal(t, arg.WeightLifted.Int32, ex2.WeightLifted)
+	require.Equal(t, arg.Notes.String, ex2.Notes)
 }
 
 func TestDeleteExerciseLog(t *testing.T) {

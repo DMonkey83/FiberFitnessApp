@@ -80,10 +80,9 @@ func (server *Server) updateAvailablePlanExercise(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.UpdateAvailablePlanExerciseParams{
-		ExerciseName: pgtype.Text{String: req.ExerciseName, Valid: true},
-		Notes:        pgtype.Text{String: req.Notes, Valid: true},
-		Sets:         pgtype.Int4{Int32: req.Sets, Valid: true},
-		RestDuration: pgtype.Text{String: req.RestDuration, Valid: true},
+		Notes:        pgtype.Text{String: req.Notes, Valid: req.Notes != ""},
+		Sets:         pgtype.Int4{Int32: req.Sets, Valid: req.Sets != 0},
+		RestDuration: pgtype.Text{String: req.RestDuration, Valid: req.RestDuration != ""},
 		ID:           req.ID,
 	}
 

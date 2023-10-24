@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/DMonkey83/MyFitnessApp/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -52,16 +53,17 @@ func TestUpdateSet(t *testing.T) {
 
 	arg := UpdateSetParams{
 		SetID:        set1.SetID,
-		SetNumber:    int32(util.GetRandomAmount(1, 10)),
-		Weight:       int32(util.GetRandomAmount(1, 200)),
-		Notes:        util.GetRandomUsername(100),
-		RestDuration: "1m",
+		SetNumber:    pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 10)), Valid: true},
+		Weight:       pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 200)), Valid: true},
+		Notes:        pgtype.Text{String: util.GetRandomUsername(100), Valid: true},
+		RestDuration: pgtype.Text{String: "1m", Valid: true},
 	}
 
 	set2, err := testStore.UpdateSet(context.Background(), arg)
-	require.Equal(t, arg.Notes, set2.Notes)
-	require.Equal(t, arg.Weight, set2.Weight)
-	require.Equal(t, arg.SetNumber, set2.SetNumber)
+	require.Equal(t, arg.Notes.String, set2.Notes)
+	require.Equal(t, arg.Weight.Int32, set2.Weight)
+	require.Equal(t, arg.SetNumber.Int32, set2.SetNumber)
+	require.Equal(t, arg.RestDuration.String, set2.RestDuration)
 	require.NoError(t, err)
 	require.NotEmpty(t, set2)
 }

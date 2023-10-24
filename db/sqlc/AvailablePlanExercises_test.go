@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/DMonkey83/MyFitnessApp/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,18 +57,18 @@ func TestUpdateAvailableExercise(t *testing.T) {
 
 	arg := UpdateAvailablePlanExerciseParams{
 		ID:           ex1.ID,
-		Notes:        util.GetRandomUsername(43),
-		Sets:         int32(util.GetRandomAmount(1, 20)),
-		RestDuration: "20m",
+		Notes:        pgtype.Text{String: util.GetRandomUsername(43), Valid: true},
+		Sets:         pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 20)), Valid: true},
+		RestDuration: pgtype.Text{String: "20m", Valid: true},
 	}
 
 	ex2, err := testStore.UpdateAvailablePlanExercise(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, ex2)
 
-	require.Equal(t, arg.Notes, ex2.Notes)
-	require.Equal(t, arg.RestDuration, ex2.RestDuration)
-	require.Equal(t, arg.Sets, ex2.Sets)
+	require.Equal(t, arg.Notes.String, ex2.Notes)
+	require.Equal(t, arg.RestDuration.String, ex2.RestDuration)
+	require.Equal(t, arg.Sets.Int32, ex2.Sets)
 }
 
 func TestDeleteAvailableExercise(t *testing.T) {

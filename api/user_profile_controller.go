@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	db "github.com/DMonkey83/FiberFitnessApp/db/sqlc"
 	val "github.com/DMonkey83/FiberFitnessApp/util/Validate"
@@ -120,12 +121,12 @@ func (server *Server) updateUserProfile(ctx *fiber.Ctx) error {
 
 	arg := db.UpdateUserProfileParams{
 		Username:      req.Username,
-		FullName:      req.FullName,
-		Age:           req.Age,
-		Gender:        req.Gender,
-		HeightCm:      req.HeightCm,
-		HeightFtIn:    req.HeightFtIn,
-		PreferredUnit: db.Weightunit(req.PreferredUnit),
+		FullName:      pgtype.Text{String: req.FullName, Valid: req.FullName != ""},
+		Age:           pgtype.Int4{Int32: req.Age, Valid: req.Age == 0},
+		Gender:        pgtype.Text{String: req.Gender, Valid: req.Gender != ""},
+		HeightCm:      pgtype.Int4{Int32: req.HeightCm, Valid: req.HeightCm == 0},
+		HeightFtIn:    pgtype.Text{String: req.HeightFtIn, Valid: req.HeightFtIn != ""},
+		PreferredUnit: db.NullWeightunit{Weightunit: db.Weightunit(req.PreferredUnit), Valid: req.PreferredUnit != ""},
 	}
 
 	userProfile, err := server.store.UpdateUserProfile(ctx.Context(), arg)

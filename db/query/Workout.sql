@@ -27,16 +27,16 @@ WHERE workout_id = $1;
 -- name: UpdateWorkout :one
 UPDATE Workout
 SET 
-workout_date = $2, 
-workout_duration = $3, 
-notes = $4,
-fatigue_level = $5, 
-total_sets =$6,
-total_distance=$7,
-total_repetitions=$8,
-total_weight_lifted=$9,
-total_calories_burned =$10
-WHERE workout_id = $1
+workout_date = COALESCE(sqlc.narg(workout_date),workout_date),
+workout_duration = COALESCE(sqlc.narg(workout_duration),workout_duration),
+notes = COALESCE(sqlc.narg(notes),notes),
+fatigue_level = COALESCE(sqlc.narg(fatigue_level),fatigue_level),
+total_sets = COALESCE(sqlc.narg(total_sets),total_sets),
+total_distance=COALESCE(sqlc.narg(total_distance),total_distance),
+total_repetitions=COALESCE(sqlc.narg(total_repetitions),total_repetitions),
+total_weight_lifted=COALESCE(sqlc.narg(total_weight_lifted),total_weight_lifted),
+total_calories_burned =COALESCE(sqlc.narg(total_calories_burned),total_calories_burned)
+WHERE workout_id = @workout_id
 RETURNING *;
 
 -- name: ListWorkouts :many

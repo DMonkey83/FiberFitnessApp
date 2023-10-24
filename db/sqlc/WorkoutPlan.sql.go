@@ -8,6 +8,8 @@ package db
 import (
 	"context"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createPlan = `-- name: CreatePlan :one
@@ -110,33 +112,31 @@ func (q *Queries) GetPlan(ctx context.Context, arg GetPlanParams) (Workoutplan, 
 const updatePlan = `-- name: UpdatePlan :one
 UPDATE WorkoutPlan
 SET 
-plan_name = $3, 
-description = $4,
-start_date = $5,
-end_date = $6,
-goal = $7,
-difficulty = $8,
-is_public = $9
-WHERE plan_id = $1 AND username = $2
+plan_name = COALESCE($1,plan_name),
+description = COALESCE($2,description),
+start_date = COALESCE($3,start_date),
+end_date = COALESCE($4,end_date),
+goal = COALESCE($5,goal),
+difficulty = COALESCE($6,difficulty),
+is_public = COALESCE($7,is_public)
+WHERE plan_id = $8 AND username = $9
 RETURNING plan_id, username, plan_name, description, start_date, end_date, goal, difficulty, is_public, created_at
 `
 
 type UpdatePlanParams struct {
-	PlanID      int64           `json:"plan_id"`
-	Username    string          `json:"username"`
-	PlanName    string          `json:"plan_name"`
-	Description string          `json:"description"`
-	StartDate   time.Time       `json:"start_date"`
-	EndDate     time.Time       `json:"end_date"`
-	Goal        Workoutgoalenum `json:"goal"`
-	Difficulty  Difficulty      `json:"difficulty"`
-	IsPublic    Visibility      `json:"is_public"`
+	PlanName    pgtype.Text         `json:"plan_name"`
+	Description pgtype.Text         `json:"description"`
+	StartDate   pgtype.Timestamptz  `json:"start_date"`
+	EndDate     pgtype.Timestamptz  `json:"end_date"`
+	Goal        NullWorkoutgoalenum `json:"goal"`
+	Difficulty  NullDifficulty      `json:"difficulty"`
+	IsPublic    NullVisibility      `json:"is_public"`
+	PlanID      int64               `json:"plan_id"`
+	Username    string              `json:"username"`
 }
 
 func (q *Queries) UpdatePlan(ctx context.Context, arg UpdatePlanParams) (Workoutplan, error) {
 	row := q.db.QueryRow(ctx, updatePlan,
-		arg.PlanID,
-		arg.Username,
 		arg.PlanName,
 		arg.Description,
 		arg.StartDate,
@@ -144,6 +144,8 @@ func (q *Queries) UpdatePlan(ctx context.Context, arg UpdatePlanParams) (Workout
 		arg.Goal,
 		arg.Difficulty,
 		arg.IsPublic,
+		arg.PlanID,
+		arg.Username,
 	)
 	var i Workoutplan
 	err := row.Scan(

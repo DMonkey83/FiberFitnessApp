@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createExercise = `-- name: CreateExercise :one
@@ -72,7 +74,7 @@ func (q *Queries) GetExercise(ctx context.Context, exerciseName string) (Exercis
 const listAllExercises = `-- name: ListAllExercises :many
 SELECT exercise_name, equipment_required, description, muscle_group_name, created_at
 FROM Exercise
-ORDER BY exercise_name -- You can change the ORDER BY clause to order by a different column if needed
+ORDER BY exercise_name  -- You can change the ORDER BY clause to order by a different column if needed
 LIMIT $1
 OFFSET $2
 `
@@ -192,24 +194,27 @@ func (q *Queries) ListMuscleGroupExercises(ctx context.Context, arg ListMuscleGr
 
 const updateExercise = `-- name: UpdateExercise :one
 UPDATE Exercise
-SET description = $2, equipment_required = $3, muscle_group_name = $4
-WHERE exercise_name = $1
+SET 
+description = COALESCE($1,description), 
+equipment_required =COALESCE($2,equipment_required), 
+muscle_group_name = COALESCE($3,muscle_group_name)
+WHERE exercise_name = $4
 RETURNING exercise_name, equipment_required, description, muscle_group_name, created_at
 `
 
 type UpdateExerciseParams struct {
-	ExerciseName      string          `json:"exercise_name"`
-	Description       string          `json:"description"`
-	EquipmentRequired Equipmenttype   `json:"equipment_required"`
-	MuscleGroupName   Musclegroupenum `json:"muscle_group_name"`
+	Description       pgtype.Text         `json:"description"`
+	EquipmentRequired NullEquipmenttype   `json:"equipment_required"`
+	MuscleGroupName   NullMusclegroupenum `json:"muscle_group_name"`
+	ExerciseName      string              `json:"exercise_name"`
 }
 
 func (q *Queries) UpdateExercise(ctx context.Context, arg UpdateExerciseParams) (Exercise, error) {
 	row := q.db.QueryRow(ctx, updateExercise,
-		arg.ExerciseName,
 		arg.Description,
 		arg.EquipmentRequired,
 		arg.MuscleGroupName,
+		arg.ExerciseName,
 	)
 	var i Exercise
 	err := row.Scan(

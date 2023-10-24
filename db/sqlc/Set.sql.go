@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createSet = `-- name: CreateSet :one
@@ -125,26 +127,30 @@ func (q *Queries) ListSets(ctx context.Context, arg ListSetsParams) ([]Set, erro
 
 const updateSet = `-- name: UpdateSet :one
 UPDATE Set
-SET set_number = $2, weight = $3, rest_duration = $4, notes = $5
-WHERE set_id = $1
+SET 
+set_number = COALESCE($1,set_number), 
+weight = COALESCE($2,weight), 
+rest_duration = COALESCE($3,rest_duration), 
+notes =COALESCE($4,notes)
+WHERE set_id = $5
 RETURNING set_id, exercise_name, set_number, weight, rest_duration, reps_completed, notes, created_at
 `
 
 type UpdateSetParams struct {
-	SetID        int64  `json:"set_id"`
-	SetNumber    int32  `json:"set_number"`
-	Weight       int32  `json:"weight"`
-	RestDuration string `json:"rest_duration"`
-	Notes        string `json:"notes"`
+	SetNumber    pgtype.Int4 `json:"set_number"`
+	Weight       pgtype.Int4 `json:"weight"`
+	RestDuration pgtype.Text `json:"rest_duration"`
+	Notes        pgtype.Text `json:"notes"`
+	SetID        int64       `json:"set_id"`
 }
 
 func (q *Queries) UpdateSet(ctx context.Context, arg UpdateSetParams) (Set, error) {
 	row := q.db.QueryRow(ctx, updateSet,
-		arg.SetID,
 		arg.SetNumber,
 		arg.Weight,
 		arg.RestDuration,
 		arg.Notes,
+		arg.SetID,
 	)
 	var i Set
 	err := row.Scan(

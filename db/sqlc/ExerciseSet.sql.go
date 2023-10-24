@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createExerciseSet = `-- name: CreateExerciseSet :one
@@ -112,19 +114,28 @@ func (q *Queries) ListExerciseSets(ctx context.Context, arg ListExerciseSetsPara
 
 const updateExerciseSet = `-- name: UpdateExerciseSet :one
 UPDATE ExerciseSet
-SET weight_lifted = $2, repetitions_completed = $3
-WHERE set_id = $1
+SET 
+set_number = COALESCE($1,set_number),
+weight_lifted = COALESCE($2,weight_lifted),
+repetitions_completed = COALESCE($3,repetitions_completed)
+WHERE set_id = $4
 RETURNING set_id, exercise_log_id, set_number, weight_lifted, repetitions_completed
 `
 
 type UpdateExerciseSetParams struct {
-	SetID                int64 `json:"set_id"`
-	WeightLifted         int32 `json:"weight_lifted"`
-	RepetitionsCompleted int32 `json:"repetitions_completed"`
+	SetNumber            pgtype.Int4 `json:"set_number"`
+	WeightLifted         pgtype.Int4 `json:"weight_lifted"`
+	RepetitionsCompleted pgtype.Int4 `json:"repetitions_completed"`
+	SetID                int64       `json:"set_id"`
 }
 
 func (q *Queries) UpdateExerciseSet(ctx context.Context, arg UpdateExerciseSetParams) (Exerciseset, error) {
-	row := q.db.QueryRow(ctx, updateExerciseSet, arg.SetID, arg.WeightLifted, arg.RepetitionsCompleted)
+	row := q.db.QueryRow(ctx, updateExerciseSet,
+		arg.SetNumber,
+		arg.WeightLifted,
+		arg.RepetitionsCompleted,
+		arg.SetID,
+	)
 	var i Exerciseset
 	err := row.Scan(
 		&i.SetID,

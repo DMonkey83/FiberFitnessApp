@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/DMonkey83/MyFitnessApp/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -57,15 +58,15 @@ func TestUpdateWorkout(t *testing.T) {
 
 	arg := UpdateWorkoutParams{
 		WorkoutID:           wkout1.WorkoutID,
-		Notes:               wkout1.Notes,
-		WorkoutDuration:     "1h",
-		WorkoutDate:         time.Now(),
-		FatigueLevel:        FatiguelevelLight,
-		TotalCaloriesBurned: int32(util.GetRandomAmount(1, 3000)),
-		TotalDistance:       int32(util.GetRandomAmount(1, 10000)),
-		TotalRepetitions:    int32(util.GetRandomAmount(1, 100)),
-		TotalSets:           int32(util.GetRandomAmount(1, 20)),
-		TotalWeightLifted:   int32(util.GetRandomAmount(1, 2000)),
+		Notes:               pgtype.Text{String: wkout1.Notes, Valid: true},
+		WorkoutDuration:     pgtype.Text{String: "1h", Valid: true},
+		WorkoutDate:         pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		FatigueLevel:        NullFatiguelevel{Fatiguelevel: FatiguelevelLight, Valid: true},
+		TotalCaloriesBurned: pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 3000)), Valid: true},
+		TotalDistance:       pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 10000)), Valid: true},
+		TotalRepetitions:    pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 100)), Valid: true},
+		TotalSets:           pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 20)), Valid: true},
+		TotalWeightLifted:   pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 2000)), Valid: true},
 	}
 
 	wkout2, err := testStore.UpdateWorkout(context.Background(), arg)
@@ -73,7 +74,9 @@ func TestUpdateWorkout(t *testing.T) {
 	require.NotEmpty(t, wkout2)
 
 	require.Equal(t, arg.WorkoutID, wkout2.WorkoutID)
-	require.Equal(t, arg.WorkoutDuration, wkout2.WorkoutDuration)
+	require.Equal(t, arg.WorkoutDuration.String, wkout2.WorkoutDuration)
+	require.Equal(t, arg.FatigueLevel.Fatiguelevel, wkout2.FatigueLevel)
+	require.Equal(t, arg.TotalWeightLifted.Int32, wkout2.TotalWeightLifted)
 }
 
 func TestDeleteWorkout(t *testing.T) {

@@ -15,8 +15,10 @@ WHERE exercise_name = $1 AND username = $2 AND goal_id = $3;
 
 -- name: UpdateMaxWeightGoal :one
 UPDATE MaxWeightGoal
-SET goal_weight = $4, notes = $5
-WHERE exercise_name = $1 AND username = $2 AND goal_id = $3
+SET 
+goal_weight = COALESCE(sqlc.narg(goal_weight),goal_weight),
+notes = COALESCE(sqlc.narg(notes),notes)
+WHERE exercise_name = @exercise_name AND username = @username AND goal_id = @goal_id
 RETURNING *;
 
 -- name: ListMaxWeightGoals :many

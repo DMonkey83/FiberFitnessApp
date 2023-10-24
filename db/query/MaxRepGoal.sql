@@ -15,8 +15,10 @@ WHERE exercise_name = $1 AND username = $2 AND goal_id = $3;
 
 -- name: UpdateMaxRepGoal :one
 UPDATE MaxRepGoal
-SET goal_reps = $4, notes = $5
-WHERE exercise_name = $1 AND username = $2 AND goal_id = $3
+SET 
+goal_reps = COALESCE(sqlc.narg(goal_reps),goal_reps), 
+notes = COALESCE(sqlc.narg(notes),notes)
+WHERE exercise_name = @exercise_name AND username = @username AND goal_id = @goal_id
 RETURNING *;
 
 -- name: ListMaxRepGoals :many

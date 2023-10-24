@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createOneOffWorkoutExercise = `-- name: CreateOneOffWorkoutExercise :one
@@ -130,24 +132,26 @@ func (q *Queries) ListAllOneOffWorkoutExercises(ctx context.Context, arg ListAll
 
 const updateOneOffWorkoutExercise = `-- name: UpdateOneOffWorkoutExercise :one
 UPDATE OneOffWorkoutExercise
-SET description = $3, muscle_group_name = $4
-WHERE id = $1 AND workout_id = $2
+SET 
+description = COALESCE($1,description),
+muscle_group_name = COALESCE($2,muscle_group_name)
+WHERE id = $3 AND workout_id = $4
 RETURNING id, workout_id, exercise_name, description, muscle_group_name, created_at
 `
 
 type UpdateOneOffWorkoutExerciseParams struct {
-	ID              int32           `json:"id"`
-	WorkoutID       int64           `json:"workout_id"`
-	Description     string          `json:"description"`
-	MuscleGroupName Musclegroupenum `json:"muscle_group_name"`
+	Description     pgtype.Text         `json:"description"`
+	MuscleGroupName NullMusclegroupenum `json:"muscle_group_name"`
+	ID              int32               `json:"id"`
+	WorkoutID       int64               `json:"workout_id"`
 }
 
 func (q *Queries) UpdateOneOffWorkoutExercise(ctx context.Context, arg UpdateOneOffWorkoutExerciseParams) (Oneoffworkoutexercise, error) {
 	row := q.db.QueryRow(ctx, updateOneOffWorkoutExercise,
-		arg.ID,
-		arg.WorkoutID,
 		arg.Description,
 		arg.MuscleGroupName,
+		arg.ID,
+		arg.WorkoutID,
 	)
 	var i Oneoffworkoutexercise
 	err := row.Scan(

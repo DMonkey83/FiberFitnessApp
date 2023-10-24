@@ -25,12 +25,12 @@ WHERE plan_id = $1 AND username =$2;
 -- name: UpdatePlan :one
 UPDATE WorkoutPlan
 SET 
-plan_name = $3, 
-description = $4,
-start_date = $5,
-end_date = $6,
-goal = $7,
-difficulty = $8,
-is_public = $9
-WHERE plan_id = $1 AND username = $2
+plan_name = COALESCE(sqlc.narg(plan_name),plan_name),
+description = COALESCE(sqlc.narg(description),description),
+start_date = COALESCE(sqlc.narg(start_date),start_date),
+end_date = COALESCE(sqlc.narg(end_date),end_date),
+goal = COALESCE(sqlc.narg(goal),goal),
+difficulty = COALESCE(sqlc.narg(difficulty),difficulty),
+is_public = COALESCE(sqlc.narg(is_public),is_public)
+WHERE plan_id = @plan_id AND username = @username
 RETURNING *;

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/DMonkey83/MyFitnessApp/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -52,8 +53,8 @@ func TestUpdateExerciseSet(t *testing.T) {
 
 	arg := UpdateExerciseSetParams{
 		SetID:                set1.SetID,
-		RepetitionsCompleted: int32(util.GetRandomAmount(1, 100)),
-		WeightLifted:         int32(util.GetRandomAmount(1, 2000)),
+		RepetitionsCompleted: pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 100)), Valid: true},
+		WeightLifted:         pgtype.Int4{Int32: int32(util.GetRandomAmount(1, 2000)), Valid: true},
 	}
 
 	set2, err := testStore.UpdateExerciseSet(context.Background(), arg)
@@ -62,8 +63,8 @@ func TestUpdateExerciseSet(t *testing.T) {
 
 	require.Equal(t, set1.ExerciseLogID, set2.ExerciseLogID)
 	require.Equal(t, set1.SetID, set2.SetID)
-	require.Equal(t, arg.RepetitionsCompleted, set2.RepetitionsCompleted)
-	require.Equal(t, arg.WeightLifted, set2.WeightLifted)
+	require.Equal(t, arg.RepetitionsCompleted.Int32, set2.RepetitionsCompleted)
+	require.Equal(t, arg.WeightLifted.Int32, set2.WeightLifted)
 }
 
 func TestDeleteExerciseSet(t *testing.T) {

@@ -99,11 +99,11 @@ func (server *Server) updateAvailablePlan(ctx *fiber.Ctx) error {
 	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.UpdateAvailablePlanParams{
 		CreatorUsername: authPayload.Username,
-		PlanName:        pgtype.Text{String: req.PlanName, Valid: true},
-		Description:     pgtype.Text{String: req.Description, Valid: true},
-		Goal:            db.NullWorkoutgoalenum{Workoutgoalenum: db.Workoutgoalenum(req.Goal), Valid: true},
-		Difficulty:      db.NullDifficulty{Difficulty: db.Difficulty(req.Difficulty), Valid: true},
-		IsPublic:        db.NullVisibility{Visibility: db.Visibility(req.IsPublic), Valid: true},
+		PlanName:        pgtype.Text{String: req.PlanName, Valid: req.PlanName != ""},
+		Description:     pgtype.Text{String: req.Description, Valid: req.Description != ""},
+		Goal:            db.NullWorkoutgoalenum{Workoutgoalenum: db.Workoutgoalenum(req.Goal), Valid: req.Goal != ""},
+		Difficulty:      db.NullDifficulty{Difficulty: db.Difficulty(req.Difficulty), Valid: req.Difficulty != ""},
+		IsPublic:        db.NullVisibility{Visibility: db.Visibility(req.IsPublic), Valid: req.IsPublic != ""},
 	}
 
 	availablePlan, err := server.store.UpdateAvailablePlan(ctx.Context(), arg)

@@ -8,6 +8,8 @@ package db
 import (
 	"context"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createWorkoutLog = `-- name: CreateWorkoutLog :one
@@ -176,39 +178,38 @@ func (q *Queries) ListWorkoutLogs(ctx context.Context, arg ListWorkoutLogsParams
 const updateWorkoutLog = `-- name: UpdateWorkoutLog :one
 UPDATE WorkoutLog
 SET 
-log_date = $2, 
-workout_duration = $3, 
-comments = $4,
-fatigue_level = $5, 
-total_sets =$6,
-total_distance=$7,
-total_repetitions=$8,
-total_weight_lifted=$9,
-total_calories_burned =$10,
-rating = $11,
-overall_feeling = $12
-WHERE log_id = $1
+log_date = COALESCE($1,log_date),
+workout_duration = COALESCE($2,workout_duration),
+comments = COALESCE($3,comments),
+fatigue_level = COALESCE($4,fatigue_level),
+total_sets =COALESCE($5,total_sets),
+total_distance=COALESCE($6,total_distance),
+total_repetitions= COALESCE($7,total_repetitions),
+total_weight_lifted= COALESCE($8,total_weight_lifted),
+total_calories_burned = COALESCE($9,total_calories_burned),
+rating = COALESCE($10,rating),
+overall_feeling = COALESCE($11,overall_feeling)
+WHERE log_id = $12
 RETURNING log_id, username, plan_id, log_date, rating, fatigue_level, overall_feeling, comments, workout_duration, total_calories_burned, total_distance, total_repetitions, total_sets, total_weight_lifted, created_at
 `
 
 type UpdateWorkoutLogParams struct {
-	LogID               int64        `json:"log_id"`
-	LogDate             time.Time    `json:"log_date"`
-	WorkoutDuration     string       `json:"workout_duration"`
-	Comments            string       `json:"comments"`
-	FatigueLevel        Fatiguelevel `json:"fatigue_level"`
-	TotalSets           int32        `json:"total_sets"`
-	TotalDistance       int32        `json:"total_distance"`
-	TotalRepetitions    int32        `json:"total_repetitions"`
-	TotalWeightLifted   int32        `json:"total_weight_lifted"`
-	TotalCaloriesBurned int32        `json:"total_calories_burned"`
-	Rating              Rating       `json:"rating"`
-	OverallFeeling      string       `json:"overall_feeling"`
+	LogDate             pgtype.Timestamptz `json:"log_date"`
+	WorkoutDuration     pgtype.Text        `json:"workout_duration"`
+	Comments            pgtype.Text        `json:"comments"`
+	FatigueLevel        NullFatiguelevel   `json:"fatigue_level"`
+	TotalSets           pgtype.Int4        `json:"total_sets"`
+	TotalDistance       pgtype.Int4        `json:"total_distance"`
+	TotalRepetitions    pgtype.Int4        `json:"total_repetitions"`
+	TotalWeightLifted   pgtype.Int4        `json:"total_weight_lifted"`
+	TotalCaloriesBurned pgtype.Int4        `json:"total_calories_burned"`
+	Rating              NullRating         `json:"rating"`
+	OverallFeeling      pgtype.Text        `json:"overall_feeling"`
+	LogID               int64              `json:"log_id"`
 }
 
 func (q *Queries) UpdateWorkoutLog(ctx context.Context, arg UpdateWorkoutLogParams) (Workoutlog, error) {
 	row := q.db.QueryRow(ctx, updateWorkoutLog,
-		arg.LogID,
 		arg.LogDate,
 		arg.WorkoutDuration,
 		arg.Comments,
@@ -220,6 +221,7 @@ func (q *Queries) UpdateWorkoutLog(ctx context.Context, arg UpdateWorkoutLogPara
 		arg.TotalCaloriesBurned,
 		arg.Rating,
 		arg.OverallFeeling,
+		arg.LogID,
 	)
 	var i Workoutlog
 	err := row.Scan(

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/DMonkey83/MyFitnessApp/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,11 +56,11 @@ func TestUpdateUserProfile(t *testing.T) {
 
 	arg := UpdateUserProfileParams{
 		Username:      user1.Username,
-		FullName:      util.GetRandomEmail(8),
-		Age:           int32(util.GetRandomAmount(16, 50)),
-		Gender:        "female",
-		HeightCm:      int32(util.GetRandomAmount(150, 220)),
-		PreferredUnit: WeightunitKg,
+		FullName:      pgtype.Text{String: util.GetRandomUsername(8), Valid: true},
+		Age:           pgtype.Int4{Int32: int32(util.GetRandomAmount(16, 50)), Valid: true},
+		Gender:        pgtype.Text{String: "female", Valid: true},
+		HeightCm:      pgtype.Int4{Int32: int32(util.GetRandomAmount(150, 220)), Valid: true},
+		PreferredUnit: NullWeightunit{Weightunit: user1.PreferredUnit, Valid: true},
 	}
 
 	user2, err := testStore.UpdateUserProfile(context.Background(), arg)
@@ -67,8 +68,8 @@ func TestUpdateUserProfile(t *testing.T) {
 	require.NotEmpty(t, user2)
 
 	require.Equal(t, arg.Username, user2.Username)
-	require.Equal(t, arg.FullName, user2.FullName)
-	require.Equal(t, arg.Age, user2.Age)
+	require.Equal(t, arg.FullName.String, user2.FullName)
+	require.Equal(t, arg.Age.Int32, user2.Age)
 }
 
 func TestDeleteUserProfile(t *testing.T) {

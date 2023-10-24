@@ -30,18 +30,18 @@ WHERE log_id = $1;
 -- name: UpdateWorkoutLog :one
 UPDATE WorkoutLog
 SET 
-log_date = $2, 
-workout_duration = $3, 
-comments = $4,
-fatigue_level = $5, 
-total_sets =$6,
-total_distance=$7,
-total_repetitions=$8,
-total_weight_lifted=$9,
-total_calories_burned =$10,
-rating = $11,
-overall_feeling = $12
-WHERE log_id = $1
+log_date = COALESCE(sqlc.narg(log_date),log_date),
+workout_duration = COALESCE(sqlc.narg(workout_duration),workout_duration),
+comments = COALESCE(sqlc.narg(comments),comments),
+fatigue_level = COALESCE(sqlc.narg(fatigue_level),fatigue_level),
+total_sets =COALESCE(sqlc.narg(total_sets),total_sets),
+total_distance=COALESCE(sqlc.narg(total_distance),total_distance),
+total_repetitions= COALESCE(sqlc.narg(total_repetitions),total_repetitions),
+total_weight_lifted= COALESCE(sqlc.narg(total_weight_lifted),total_weight_lifted),
+total_calories_burned = COALESCE(sqlc.narg(total_calories_burned),total_calories_burned),
+rating = COALESCE(sqlc.narg(rating),rating),
+overall_feeling = COALESCE(sqlc.narg(overall_feeling),overall_feeling)
+WHERE log_id = @log_id
 RETURNING *;
 
 -- name: ListWorkoutLogs :many
