@@ -6,6 +6,8 @@ import (
 	"time"
 
 	db "github.com/DMonkey83/FiberFitnessApp/db/sqlc"
+	"github.com/DMonkey83/FiberFitnessApp/middleware"
+	"github.com/DMonkey83/FiberFitnessApp/token"
 	val "github.com/DMonkey83/FiberFitnessApp/util/Validate"
 	res "github.com/DMonkey83/FiberFitnessApp/util/response"
 	"github.com/gofiber/fiber/v2"
@@ -51,8 +53,9 @@ func (server *Server) createWorkoutPlan(ctx *fiber.Ctx) error {
 		log.Print(err, req)
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.CreatePlanParams{
-		Username:    req.Username,
+		Username:    authPayload.Username,
 		PlanName:    req.PlanName,
 		Description: req.Description,
 		StartDate:   req.StartDate,
@@ -75,9 +78,10 @@ func (server *Server) getWorkoutPlan(ctx *fiber.Ctx) error {
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
 
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.GetPlanParams{
 		PlanID:   req.PlanID,
-		Username: req.Username,
+		Username: authPayload.Username,
 	}
 
 	plan, err := server.store.GetPlan(ctx.Context(), arg)
@@ -97,9 +101,10 @@ func (server *Server) updateWorkoutPlan(ctx *fiber.Ctx) error {
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
 
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.UpdatePlanParams{
 		PlanID:      req.PlanID,
-		Username:    req.Username,
+		Username:    authPayload.Username,
 		PlanName:    pgtype.Text{String: req.PlanName, Valid: req.PlanName != ""},
 		Goal:        db.NullWorkoutgoalenum{Workoutgoalenum: db.Workoutgoalenum(req.Goal), Valid: req.Goal != ""},
 		Difficulty:  db.NullDifficulty{Difficulty: db.Difficulty(req.Difficulty), Valid: req.Difficulty != ""},

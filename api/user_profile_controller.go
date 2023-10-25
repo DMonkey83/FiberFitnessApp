@@ -8,6 +8,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	db "github.com/DMonkey83/FiberFitnessApp/db/sqlc"
+	"github.com/DMonkey83/FiberFitnessApp/middleware"
+	"github.com/DMonkey83/FiberFitnessApp/token"
 	val "github.com/DMonkey83/FiberFitnessApp/util/Validate"
 	res "github.com/DMonkey83/FiberFitnessApp/util/response"
 )
@@ -99,8 +101,9 @@ func (server *Server) getUserProfile(ctx *fiber.Ctx) error {
 		return res.ResponseError(ctx, nil, err.Error())
 	}
 
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	rsp := userProfileResponse{
-		Username:      userProfile.Userprofile.Username,
+		Username:      authPayload.Username,
 		FullName:      userProfile.Userprofile.FullName,
 		Email:         userProfile.User.Email,
 		Age:           userProfile.Userprofile.Age,

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	db "github.com/DMonkey83/FiberFitnessApp/db/sqlc"
+	"github.com/DMonkey83/FiberFitnessApp/middleware"
+	"github.com/DMonkey83/FiberFitnessApp/token"
 	val "github.com/DMonkey83/FiberFitnessApp/util/Validate"
 	res "github.com/DMonkey83/FiberFitnessApp/util/response"
 	"github.com/gofiber/fiber/v2"
@@ -51,8 +53,9 @@ func (server *Server) createWeightEntry(ctx *fiber.Ctx) error {
 		log.Print(err, req)
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.CreateWeightEntryParams{
-		Username:  req.Username,
+		Username:  authPayload.Username,
 		EntryDate: req.EntryDate,
 		WeightKg:  req.WeightKg,
 		WeightLb:  req.WeightLb,
@@ -71,9 +74,10 @@ func (server *Server) getWeightEntry(ctx *fiber.Ctx) error {
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
 
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.GetWeightEntryParams{
 		WeightEntryID: req.WeightEntryID,
-		Username:      req.Username,
+		Username:      authPayload.Username,
 	}
 
 	weight_entry, err := server.store.GetWeightEntry(ctx.Context(), arg)
@@ -93,12 +97,13 @@ func (server *Server) updateWeightEntry(ctx *fiber.Ctx) error {
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
 
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.UpdateWeightEntryParams{
 		EntryDate:     pgtype.Timestamptz{Time: req.EntryDate, Valid: req.EntryDate != time.Time{}},
 		WeightKg:      pgtype.Int4{Int32: req.WeightKg, Valid: req.WeightKg != 0},
 		WeightLb:      pgtype.Int4{Int32: req.WeightLb, Valid: req.WeightLb != 0},
 		Notes:         pgtype.Text{String: req.Notes, Valid: req.Notes != ""},
-		Username:      req.Username,
+		Username:      authPayload.Username,
 		WeightEntryID: req.WeightEntryID,
 	}
 	weight_entry, err := server.store.UpdateWeightEntry(ctx.Context(), arg)
@@ -117,10 +122,11 @@ func (server *Server) listWeightEntries(ctx *fiber.Ctx) error {
 	if err := ctx.QueryParser(&req); err != nil {
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.ListWeightEntriesParams{
 		Limit:    req.Limit,
 		Offset:   req.Offset,
-		Username: req.Username,
+		Username: authPayload.Username,
 	}
 	weight_entry, err := server.store.ListWeightEntries(ctx.Context(), arg)
 	if err != nil {

@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	db "github.com/DMonkey83/FiberFitnessApp/db/sqlc"
+	"github.com/DMonkey83/FiberFitnessApp/middleware"
+	"github.com/DMonkey83/FiberFitnessApp/token"
 	val "github.com/DMonkey83/FiberFitnessApp/util/Validate"
 	res "github.com/DMonkey83/FiberFitnessApp/util/response"
 	"github.com/gofiber/fiber/v2"
@@ -50,8 +52,9 @@ func (server *Server) createMaxRepGoal(ctx *fiber.Ctx) error {
 		log.Print(err, req)
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.CreateMaxRepGoalParams{
-		Username:     req.Username,
+		Username:     authPayload.Username,
 		ExerciseName: req.ExerciseName,
 		Notes:        req.Notes,
 		GoalReps:     req.GoalReps,
@@ -69,9 +72,10 @@ func (server *Server) getMaxRepGoal(ctx *fiber.Ctx) error {
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
 
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.GetMaxRepGoalParams{
 		GoalID:       req.GoalID,
-		Username:     req.Username,
+		Username:     authPayload.Username,
 		ExerciseName: req.ExerciseName,
 	}
 
@@ -92,9 +96,10 @@ func (server *Server) updateMaxRepGoal(ctx *fiber.Ctx) error {
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
 
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.UpdateMaxRepGoalParams{
 		GoalID:       req.GoalID,
-		Username:     req.Username,
+		Username:     authPayload.Username,
 		ExerciseName: req.ExerciseName,
 		GoalReps:     pgtype.Int4{Int32: req.GoalReps, Valid: req.GoalReps != 0},
 		Notes:        pgtype.Text{String: req.Notes, Valid: req.Notes != ""},
@@ -116,10 +121,11 @@ func (server *Server) listMaxRepGoals(ctx *fiber.Ctx) error {
 	if err := ctx.QueryParser(&req); err != nil {
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.ListMaxRepGoalsParams{
 		Limit:        req.Limit,
 		Offset:       req.Offset,
-		Username:     req.Username,
+		Username:     authPayload.Username,
 		ExerciseName: req.ExerciseName,
 	}
 	goals, err := server.store.ListMaxRepGoals(ctx.Context(), arg)

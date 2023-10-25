@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	db "github.com/DMonkey83/FiberFitnessApp/db/sqlc"
+	"github.com/DMonkey83/FiberFitnessApp/middleware"
+	"github.com/DMonkey83/FiberFitnessApp/token"
 	val "github.com/DMonkey83/FiberFitnessApp/util/Validate"
 	res "github.com/DMonkey83/FiberFitnessApp/util/response"
 	"github.com/gofiber/fiber/v2"
@@ -50,8 +52,9 @@ func (server *Server) createMaxWeightGoal(ctx *fiber.Ctx) error {
 		log.Print(err, req)
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.CreateMaxWeightGoalParams{
-		Username:     req.Username,
+		Username:     authPayload.Username,
 		ExerciseName: req.ExerciseName,
 		Notes:        req.Notes,
 		GoalWeight:   req.GoalWeight,
@@ -69,9 +72,10 @@ func (server *Server) getMaxWeightGoal(ctx *fiber.Ctx) error {
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
 
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.GetMaxWeightGoalParams{
 		GoalID:       req.GoalID,
-		Username:     req.Username,
+		Username:     authPayload.Username,
 		ExerciseName: req.ExerciseName,
 	}
 
@@ -92,9 +96,10 @@ func (server *Server) updateMaxWeightGoal(ctx *fiber.Ctx) error {
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
 
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.UpdateMaxWeightGoalParams{
 		GoalID:       req.GoalID,
-		Username:     req.Username,
+		Username:     authPayload.Username,
 		ExerciseName: req.ExerciseName,
 		GoalWeight:   pgtype.Int4{Int32: req.GoalWeight, Valid: req.GoalWeight != 0},
 		Notes:        pgtype.Text{String: req.Notes, Valid: req.Notes != ""},
@@ -116,10 +121,11 @@ func (server *Server) listMaxWeightGoals(ctx *fiber.Ctx) error {
 	if err := ctx.QueryParser(&req); err != nil {
 		return res.ResponseValidationError(ctx, nil, err.Error())
 	}
+	authPayload := ctx.Locals(middleware.AuthorizationPayloadKey).(*token.Payload)
 	arg := db.ListMaxWeightGoalsParams{
 		Limit:        req.Limit,
 		Offset:       req.Offset,
-		Username:     req.Username,
+		Username:     authPayload.Username,
 		ExerciseName: req.ExerciseName,
 	}
 	goals, err := server.store.ListMaxWeightGoals(ctx.Context(), arg)
