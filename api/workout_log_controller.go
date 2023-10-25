@@ -134,7 +134,7 @@ func (server *Server) updateWorkoutLog(ctx *fiber.Ctx) error {
 	return ctx.Status(http.StatusOK).JSON(log)
 }
 
-func (server *Server) listWorkoutLog(ctx *fiber.Ctx) error {
+func (server *Server) listWorkoutLogs(ctx *fiber.Ctx) error {
 	var req listWorkoutLogRequest
 	if err := ctx.QueryParser(&req); err != nil {
 		return res.ResponseValidationError(ctx, nil, err.Error())

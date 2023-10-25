@@ -97,7 +97,7 @@ func (server *Server) updateAvailablePlanExercise(ctx *fiber.Ctx) error {
 	return ctx.Status(http.StatusOK).JSON(availablePlanExercise)
 }
 
-func (server *Server) ListAllAvailablePlansExercises(ctx *fiber.Ctx) error {
+func (server *Server) listAllAvailablePlansExercises(ctx *fiber.Ctx) error {
 	var req listAllAvailablePlansExercisesRequest
 	if err := ctx.QueryParser(&req); err != nil {
 		return res.ResponseValidationError(ctx, nil, err.Error())
